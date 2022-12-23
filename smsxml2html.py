@@ -97,7 +97,6 @@ def parse_carrier_number(number):
 def parse_conversations(root, conversations, users, base_path, carrier_number):
     messages = 0
     for child in root:
-        messages += parse_conversations(child, conversations, users, base_path, carrier_number)
         if child.tag == 'sms':
             address = parse_carrier_number(child.attrib['address'])
             date = int(child.attrib['date'])  # Epoch timestamp
