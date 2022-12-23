@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # SMS XML to HTML
 # By Christopher Mitchell, Ph.D.
@@ -52,10 +52,7 @@ STYLESHEET_TEMPLATE = """
 class SMSMsg:
     def __init__(self, timestamp, text, type_, extra):
         self.timestamp = timestamp
-        if isinstance(text, str) :
-            self.text = text.decode('utf8')
-        else :
-            self.text = text
+        self.text = text
         self.type_ = type_
         self.extra = extra
 
@@ -137,7 +134,7 @@ def parseConversations(root, conversations, users, base_path, carrier_number):
                             parsed_child_address = parseCarrierNumber(addr_child.attrib['address'])
                             if carrier_number not in parsed_child_address:
                                 addresses[parsed_child_address] = addr_child.attrib['type']
-                for address, type_ in addresses.iteritems():
+                for address, type_ in addresses.items():
                     save_msg.address = address
                     save_msg.type_ = type_
                     save_msg.timestamp = date
@@ -156,7 +153,7 @@ def dumpConversations(base_path, conversations, carrier_number):
     with open(os.path.join(base_path, 'stylesheet.css'), 'w') as f:
         f.write(STYLESHEET_TEMPLATE)
 
-    for address, conversation in conversations.iteritems():
+    for address, conversation in conversations.items():
         output_path = os.path.join(base_path, address + '.html')
 
         with open(output_path, 'w') as f:
@@ -170,7 +167,7 @@ def dumpConversations(base_path, conversations, carrier_number):
             for date in sorted(conversation.keys()):
                 msg = conversation[date]
                 dt = datetime.datetime.utcfromtimestamp(msg.timestamp / 1000)
-                month_year = dt.strftime('%B %Y').decode(locale.getpreferredencoding())
+                month_year = dt.strftime('%B %Y')
                 if month_year != prev_month_year:
                     month_year_short = dt.strftime('%y%m')
                     months.append(month_year)
@@ -188,7 +185,7 @@ def dumpConversations(base_path, conversations, carrier_number):
             for date in sorted(conversation.keys()):
                 msg = conversation[date]
                 dt = datetime.datetime.utcfromtimestamp(msg.timestamp / 1000)
-                month_year = dt.strftime('%B %Y').decode(locale.getpreferredencoding())
+                month_year = dt.strftime('%B %Y')
                 if month_year != prev_month_year:
                     if prev_month_year != '':
                         f.write('</table>')
