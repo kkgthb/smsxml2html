@@ -4,12 +4,14 @@
 # By Christopher Mitchell, Ph.D.
 # https://github.com/smsxml2html
 
-import os,sys
+import os
+import sys
 from lxml import etree
+from lxml.etree import XMLParser
 import argparse
 import base64
-import re, string
-import time, datetime
+import re
+import datetime
 import locale
 
 STYLESHEET_TEMPLATE = """
@@ -228,7 +230,6 @@ def main():
     locale.setlocale(locale.LC_ALL, '')
     for input_ in args.input:
         # Open the input file
-        from lxml.etree import XMLParser, parse
         lxml_parser = XMLParser(huge_tree=True, recover=True)
         tree = etree.parse(input_, parser=lxml_parser)
         root = tree.getroot()
