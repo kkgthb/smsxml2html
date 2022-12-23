@@ -133,6 +133,18 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
                             parsed_child_address = parse_carrier_number(addr_child.attrib['address'])
                             if carrier_number not in parsed_child_address:
                                 addresses[parsed_child_address] = addr_child.attrib['type']
+
+            # attempt to fix missing phone numbers
+            if "" in addresses.keys():  # there is a missing number
+                if carrier_number in addresses.keys():
+                    # the missing number isn't the carrier number, so where did the message come from
+                    # or go to???
+                    print("failed to fix missing phone number in message")
+                else:  # assume that the message was sent by the carrier number
+                    if len(addresses.keys()) == 1:  # message to self?
+                        addresses[carrier_number] = addresses[""]  # copy type over, but either should work
+                    del addresses[""]
+
             for address, type_ in addresses.items():
                 save_msg.address = address
                 save_msg.type_ = type_
