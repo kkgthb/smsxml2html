@@ -133,12 +133,12 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
                             parsed_child_address = parse_carrier_number(addr_child.attrib['address'])
                             if carrier_number not in parsed_child_address:
                                 addresses[parsed_child_address] = addr_child.attrib['type']
-                for address, type_ in addresses.items():
-                    save_msg.address = address
-                    save_msg.type_ = type_
-                    save_msg.timestamp = date
-                    conversations[address][date] = save_msg
-                    messages += 1
+            for address, type_ in addresses.items():
+                save_msg.address = address
+                save_msg.type_ = type_
+                save_msg.timestamp = date
+                conversations[address][date] = save_msg
+                messages += 1
 
     return messages  # Count of messages
 
