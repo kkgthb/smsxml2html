@@ -177,7 +177,7 @@ def dumpConversations(base_path, conversations, carrier_number):
             # Generate the TOC
             f.write('<div class="toc"><ul>')
             for month_year in months:
-                f.write('<li><a href="#%s">%s</a>' % (month_amap[month_year], month_year.encode('utf8')))
+                f.write('<li><a href="#%s">%s</a>' % (month_amap[month_year], month_year))
             f.write('</ul></div>')
 
             # Generate the body
@@ -190,10 +190,10 @@ def dumpConversations(base_path, conversations, carrier_number):
                     if prev_month_year != '':
                         f.write('</table>')
                     f.write('<a name="%s"></a>' % (month_amap[month_year]))
-                    f.write("<h2>%s</h2>\n" % (month_year.encode('utf8')))
+                    f.write("<h2>%s</h2>\n" % (month_year))
                     f.write('<table class="month_convos">')
                 f.write('<tr>')
-                f.write('<td><b><span class="msg_date">%s</span></td><td><span class="msg_sender_%s">%s %s</span></b></td><td>%s' % (dt.strftime('%m/%d/%y %I:%M:%S%p'), msg.type_, '<<' if msg.type_ == "1" else '>>', address if msg.type_ == "1" else carrier_number, msg.text.encode('utf8')))
+                f.write('<td><b><span class="msg_date">%s</span></td><td><span class="msg_sender_%s">%s %s</span></b></td><td>%s' % (dt.strftime('%m/%d/%y %I:%M:%S%p'), msg.type_, '<<' if msg.type_ == "1" else '>>', address if msg.type_ == "1" else carrier_number, msg.text))
                 if isinstance(msg, MMSMsg):
                     f.write('<br />')
                     for image in msg.images:
