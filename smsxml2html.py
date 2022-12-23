@@ -58,11 +58,11 @@ class SMSMsg:
 
 
 class MMSMsg(SMSMsg):
-    def __init__(self, timestamp = 0, text = "", type_ = 1, extra = {}):
+    def __init__(self, timestamp=0, text="", type_=1, extra={}):
         SMSMsg.__init__(self, timestamp, text, type_, extra)
         self.images = []
 
-    def addImage(self, base_path, timestamp, name, mime, data):
+    def add_image(self, base_path, timestamp, name, mime, data):
         if mime == 'image/png':
             ext = 'png'
         elif mime == 'image/jpeg':
@@ -70,7 +70,7 @@ class MMSMsg(SMSMsg):
         elif mime == 'image/gif':
             ext = 'gif'
         else:
-            print("Unknown MIME type '%s' for MMS content; omitting content" % (mime))
+            print("Unknown MIME type '%s' for MMS content; omitting content" % mime)
             return
 
         name = str(timestamp) + re.sub('[^A-Za-z0-9_.-]+', '', name) + '.' + ext
@@ -79,24 +79,24 @@ class MMSMsg(SMSMsg):
             try:
                 f.write(base64.b64decode(data))
             except TypeError:
-                print("Failed to decode base64 for image %s" % (name))
+                print("Failed to decode base64 for image %s" % name)
                 return
         self.images.append(name)
 
 
-def parseCarrierNumber(number):
+def parse_carrier_number(number):
     number = re.sub('[^0-9]', '', number)
     if len(number) == 10:
         number = '1' + number
     return number
 
 
-def parseConversations(root, conversations, users, base_path, carrier_number):
+def parse_conversations(root, conversations, users, base_path, carrier_number):
     messages = 0
     for child in root:
-        messages += parseConversations(child, conversations, users, base_path, carrier_number)
+        messages += parse_conversations(child, conversations, users, base_path, carrier_number)
         if child.tag == 'sms':
-            address = parseCarrierNumber(child.attrib['address'])
+            address = parse_carrier_number(child.attrib['address'])
             date = int(child.attrib['date'])  # Epoch timestamp
             type_ = child.attrib['type']  # 2 = outgoing, 1 = incoming
             name = child.attrib['contact_name']
@@ -125,13 +125,13 @@ def parseConversations(root, conversations, users, base_path, carrier_number):
                             part_text = part_child.attrib['text'] if 'text' in part_child.attrib else ""
                             part_mime = part_child.attrib['ct']
                             if "image" in part_mime:
-                                save_msg.addImage(base_path, date, part_name, part_mime, part_data)
+                                save_msg.add_image(base_path, date, part_name, part_mime, part_data)
                             elif "text" in part_mime:
                                 save_msg.text += part_text
                 elif mms_child.tag == 'addrs':
                     for addr_child in mms_child:
                         if addr_child.tag == 'addr':
-                            parsed_child_address = parseCarrierNumber(addr_child.attrib['address'])
+                            parsed_child_address = parse_carrier_number(addr_child.attrib['address'])
                             if carrier_number not in parsed_child_address:
                                 addresses[parsed_child_address] = addr_child.attrib['type']
                 for address, type_ in addresses.items():
@@ -147,7 +147,7 @@ def parseConversations(root, conversations, users, base_path, carrier_number):
     return messages  # Count of messages
 
 
-def dumpConversations(base_path, conversations, carrier_number):
+def dump_conversations(base_path, conversations, carrier_number):
     files = 0
 
     with open(os.path.join(base_path, 'stylesheet.css'), 'w') as f:
@@ -158,7 +158,8 @@ def dumpConversations(base_path, conversations, carrier_number):
 
         with open(output_path, 'w') as f:
 
-            f.write('<html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="stylesheet.css" /></head><body>' + "\n")
+            f.write('<html><head><meta charset="UTF-8">')
+            f.write('<link rel="stylesheet" type="text/css" href="stylesheet.css" /></head><body>' + "\n")
 
             # Generate the TOC
             prev_month_year = ""
@@ -189,11 +190,15 @@ def dumpConversations(base_path, conversations, carrier_number):
                 if month_year != prev_month_year:
                     if prev_month_year != '':
                         f.write('</table>')
-                    f.write('<a name="%s"></a>' % (month_amap[month_year]))
-                    f.write("<h2>%s</h2>\n" % (month_year))
+                    f.write('<a name="%s"></a>' % month_amap[month_year])
+                    f.write("<h2>%s</h2>\n" % month_year)
                     f.write('<table class="month_convos">')
                 f.write('<tr>')
-                f.write('<td><b><span class="msg_date">%s</span></td><td><span class="msg_sender_%s">%s %s</span></b></td><td>%s' % (dt.strftime('%m/%d/%y %I:%M:%S%p'), msg.type_, '<<' if msg.type_ == "1" else '>>', address if msg.type_ == "1" else carrier_number, msg.text))
+                f.write('<td><b><span class="msg_date">%s</span></td>' % dt.strftime('%m/%d/%y %I:%M:%S%p'))
+                direction = '<<' if msg.type_ == "1" else '>>'
+                number = address if msg.type_ == "1" else carrier_number
+                f.write('<td><span class="msg_sender_%s">%s %s</span></b></td>' % (msg.type_, direction, number))
+                f.write('<td>%s' % msg.text)
                 if isinstance(msg, MMSMsg):
                     f.write('<br />')
                     for image in msg.images:
@@ -211,24 +216,21 @@ def dumpConversations(base_path, conversations, carrier_number):
 def main():
     # parse options and get results
     parser = argparse.ArgumentParser(description='Turns SMS Backup and Restore XML into HTML conversations with images')
-    parser.add_argument('input', metavar='input', nargs='+', type=str, \
-                help='Input XML file')
-    parser.add_argument('-o', '--output', type=str, required=True, \
-                help='Output directory')
-    parser.add_argument('-n', '--number', type=str, required=True, \
-                help='User\'s carrier number')
+    parser.add_argument('input', metavar='input', nargs='+', type=str, help='Input XML file')
+    parser.add_argument('-o', '--output', type=str, required=True, help='Output directory')
+    parser.add_argument('-n', '--number', type=str, required=True, help='User\'s carrier number')
     args = parser.parse_args()
-    carrier_number = parseCarrierNumber(args.number)
+    carrier_number = parse_carrier_number(args.number)
 
     messages = 0
     conversations = {}
     users = {}
     locale.setlocale(locale.LC_ALL, '')
-    for input in args.input:
+    for input_ in args.input:
         # Open the input file
         from lxml.etree import XMLParser, parse
-        lxml_parser = XMLParser(huge_tree = True, recover=True)
-        tree = etree.parse(input, parser = lxml_parser)
+        lxml_parser = XMLParser(huge_tree=True, recover=True)
+        tree = etree.parse(input_, parser=lxml_parser)
         root = tree.getroot()
 
         # Parse it out
@@ -236,12 +238,13 @@ def main():
             os.mkdir(args.output)
         except OSError:
             pass  # Already exists
-            print("Parsing conversations from %s" % (input))
-        messages += parseConversations(root, conversations, users, args.output, carrier_number)
+            print("Parsing conversations from %s" % input_)
+        messages += parse_conversations(root, conversations, users, args.output, carrier_number)
 
-    print("Parsed %d messages in %d conversations with %d known user names" % (messages, len(conversations), len(users)))
-    files = dumpConversations(args.output, conversations, carrier_number)
-    print("Dumped messages to %d conversation HTML files" % (files))
+    print("Parsed %d messages in %d conversations with %d known user names" %
+          (messages, len(conversations), len(users)))
+    files = dump_conversations(args.output, conversations, carrier_number)
+    print("Dumped messages to %d conversation HTML files" % files)
 
     sys.exit(0)
 
