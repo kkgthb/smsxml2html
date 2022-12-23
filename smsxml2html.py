@@ -13,6 +13,7 @@ import base64
 import re
 import datetime
 import locale
+from collections import defaultdict
 
 STYLESHEET_TEMPLATE = """
 .msg_date {
@@ -105,10 +106,7 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
             body = child.attrib['body']
 
             save_msg = SMSMsg(date, body, type_, {})
-            try:
-                conversations[address][date] = save_msg
-            except KeyError:
-                conversations[address] = {date: save_msg}
+            conversations[address][date] = save_msg
             messages += 1
 
             if name and address not in users:
@@ -140,10 +138,7 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
                     save_msg.address = address
                     save_msg.type_ = type_
                     save_msg.timestamp = date
-                    try:
-                        conversations[address][date] = save_msg
-                    except KeyError:
-                        conversations[address] = {date: save_msg}
+                    conversations[address][date] = save_msg
                     messages += 1
 
     return messages  # Count of messages
@@ -225,7 +220,7 @@ def main():
     carrier_number = parse_carrier_number(args.number)
 
     messages = 0
-    conversations = {}
+    conversations = defaultdict(dict)
     users = {}
     locale.setlocale(locale.LC_ALL, '')
     for input_ in args.input:
