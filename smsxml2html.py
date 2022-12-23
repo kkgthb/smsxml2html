@@ -230,7 +230,7 @@ def main():
     for input in args.input:
         # Open the input file
         from lxml.etree import XMLParser, parse
-        lxml_parser = XMLParser(huge_tree = True)
+        lxml_parser = XMLParser(huge_tree = True, recover=True)
         tree = etree.parse(input, parser = lxml_parser)
         root = tree.getroot()
 
