@@ -60,7 +60,7 @@ class SMSMsg:
 
 
 class MMSMsg(SMSMsg):
-    def __init__(self, timestamp=0, text="", type_=1, extra={}):
+    def __init__(self, timestamp=0, text="", type_=1, extra=None):
         SMSMsg.__init__(self, timestamp, text, type_, extra)
         self.images = []
 
