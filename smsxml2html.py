@@ -120,8 +120,8 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
                     for part_child in mms_child:
                         if part_child.tag == 'part':
                             part_name = part_child.attrib['name']
-                            part_data = part_child.attrib['data'] if 'data' in part_child.attrib else ""
-                            part_text = part_child.attrib['text'] if 'text' in part_child.attrib else ""
+                            part_data = part_child.attrib.get('data', "")
+                            part_text = part_child.attrib.get('text', "")
                             part_mime = part_child.attrib['ct']
                             if "image" in part_mime:
                                 save_msg.add_image(base_path, date, part_name, part_mime, part_data)
