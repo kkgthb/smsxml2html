@@ -14,6 +14,7 @@ import re
 import datetime
 import locale
 from collections import defaultdict
+import copy
 
 STYLESHEET_TEMPLATE = """
 .msg_date {
@@ -152,10 +153,11 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
                     del addresses[""]
 
             for address, type_ in addresses.items():
-                save_msg.address = address
-                save_msg.type_ = type_
-                save_msg.timestamp = date
-                conversations[address][date] = save_msg
+                new_msg = copy.deepcopy(save_msg)
+                new_msg.address = address
+                new_msg.type_ = type_
+                new_msg.timestamp = date
+                conversations[address][date] = new_msg
                 messages += 1
 
     return messages  # Count of messages
