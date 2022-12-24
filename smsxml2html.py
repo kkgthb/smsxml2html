@@ -5,7 +5,6 @@
 # https://github.com/smsxml2html
 
 import os
-import sys
 from lxml import etree
 from lxml.etree import XMLParser
 import argparse
@@ -252,8 +251,6 @@ def main():
           (messages, len(conversations), len(users)))
     files = dump_conversations(args.output, conversations, carrier_number)
     print("Dumped messages to %d conversation HTML files" % files)
-
-    sys.exit(0)
 
 
 if __name__ == '__main__':
