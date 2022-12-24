@@ -28,11 +28,17 @@ STYLESHEET_TEMPLATE = """
     color: #000060;
     white-space: nowrap;
 }
+.msg_sender_1::before, .msg_sender_137::before {
+    content: " << ";
+}
 .msg_sender_2, .msg_sender_151 {
     font-family: 'Courier New', monospaced;
     font-size: 0.75em;
     color: #006000;
     white-space: nowrap;
+}
+.msg_sender_2::before, .msg_sender_151::before {
+    content: " >> ";
 }
 .mms_img {
     max-height: 50vh;
@@ -166,7 +172,7 @@ def dump_conversations(base_path, conversations, carrier_number):
 
         with open(output_path, 'w') as f:
 
-            f.write('<html><head><meta charset="UTF-8">')
+            f.write('<!DOCTYPE html><html><head><meta charset="UTF-8">')
             f.write('<link rel="stylesheet" type="text/css" href="stylesheet.css" /></head><body>' + "\n")
 
             # Generate the TOC
@@ -202,16 +208,15 @@ def dump_conversations(base_path, conversations, carrier_number):
                     f.write("<h2>%s</h2>\n" % month_year)
                     f.write('<table class="month_convos">')
                 f.write('<tr>')
-                f.write('<td><b><span class="msg_date">%s</span></td>' % dt.strftime('%m/%d/%y %I:%M:%S%p'))
-                direction = '<<' if msg.type_ == "1" else '>>'
+                f.write('<td><b><span class="msg_date">%s</span></b></td>' % dt.strftime('%m/%d/%y %I:%M:%S%p'))
                 number = address if msg.type_ == "1" else carrier_number
-                f.write('<td><span class="msg_sender_%s">%s %s</span></b></td>' % (msg.type_, direction, number))
+                f.write('<td><b><span class="msg_sender_%s">%s</span></b></td>' % (msg.type_, number))
                 f.write('<td>%s' % msg.text)
                 if isinstance(msg, MMSMsg):
                     f.write('<br />')
                     for image in msg.images:
                         f.write('<a href="%s"><img class="mms_img" src="%s" /></a> ' % (image, image))
-                f.write('</td></tr>')
+                f.write('</td>')
                 f.write("</tr>\n")
                 prev_month_year = month_year
 
