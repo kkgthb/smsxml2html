@@ -131,7 +131,7 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
                     for addr_child in mms_child:
                         if addr_child.tag == 'addr':
                             parsed_child_address = parse_carrier_number(addr_child.attrib['address'])
-                            if carrier_number not in parsed_child_address:
+                            if carrier_number != parsed_child_address:
                                 addresses[parsed_child_address] = addr_child.attrib['type']
 
             # attempt to fix missing phone numbers
