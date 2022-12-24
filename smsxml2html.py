@@ -53,16 +53,15 @@ STYLESHEET_TEMPLATE = """
 
 
 class SMSMsg:
-    def __init__(self, timestamp, text, type_, extra):
+    def __init__(self, timestamp, text, type_):
         self.timestamp = timestamp
         self.text = text
         self.type_ = type_
-        self.extra = extra
 
 
 class MMSMsg(SMSMsg):
-    def __init__(self, timestamp=0, text="", type_=1, extra=None):
-        SMSMsg.__init__(self, timestamp, text, type_, extra)
+    def __init__(self, timestamp=0, text="", type_=1):
+        SMSMsg.__init__(self, timestamp, text, type_)
         self.images = []
 
     def add_image(self, base_path, timestamp, name, mime, data):
@@ -104,7 +103,7 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
             name = child.attrib['contact_name']
             body = child.attrib['body']
 
-            save_msg = SMSMsg(date, body, type_, {})
+            save_msg = SMSMsg(date, body, type_)
             conversations[address][date] = save_msg
             messages += 1
 
