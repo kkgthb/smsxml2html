@@ -209,7 +209,7 @@ def dump_conversations(base_path, conversations, carrier_number):
                     f.write('<table class="month_convos">')
                 f.write('<tr>')
                 f.write('<td><b><span class="msg_date">%s</span></b></td>' % dt.strftime('%m/%d/%y %I:%M:%S%p'))
-                number = address if msg.type_ == "1" else carrier_number
+                number = address if msg.type_ in ["1", "137"] else carrier_number
                 f.write('<td><b><span class="msg_sender_%s">%s</span></b></td>' % (msg.type_, number))
                 f.write('<td>%s' % msg.text)
                 if isinstance(msg, MMSMsg):
