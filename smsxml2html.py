@@ -17,26 +17,22 @@ from collections import defaultdict
 import copy
 
 STYLESHEET_TEMPLATE = """
-.msg_date {
+.msg_date, .msg_sender_incoming, .msg_sender_outgoing {
     font-family: 'Courier New', monospaced;
     font-size: 0.75em;
-    color: #600000;
     white-space: nowrap;
 }
+.msg_date {
+    color: #600000;
+}
 .msg_sender_incoming {
-    font-family: 'Courier New', monospaced;
-    font-size: 0.75em;
     color: #000060;
-    white-space: nowrap;
 }
 .msg_sender_incoming::before {
     content: " << ";
 }
 .msg_sender_outgoing {
-    font-family: 'Courier New', monospaced;
-    font-size: 0.75em;
     color: #006000;
-    white-space: nowrap;
 }
 .msg_sender_outgoing::before {
     content: " >> ";
@@ -45,10 +41,7 @@ STYLESHEET_TEMPLATE = """
     max-height: 50vh;
     border: 0;
 }
-.month_convos tr {
-    vertical-align: text-top;
-}
-.month_convos td {
+.month_convos tr, .month_convos td {
     vertical-align: text-top;
 }
 .toc {
