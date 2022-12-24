@@ -23,22 +23,22 @@ STYLESHEET_TEMPLATE = """
     color: #600000;
     white-space: nowrap;
 }
-.msg_sender_1, .msg_sender_137 {
+.msg_sender_incoming {
     font-family: 'Courier New', monospaced;
     font-size: 0.75em;
     color: #000060;
     white-space: nowrap;
 }
-.msg_sender_1::before, .msg_sender_137::before {
+.msg_sender_incoming::before {
     content: " << ";
 }
-.msg_sender_2, .msg_sender_151 {
+.msg_sender_outgoing {
     font-family: 'Courier New', monospaced;
     font-size: 0.75em;
     color: #006000;
     white-space: nowrap;
 }
-.msg_sender_2::before, .msg_sender_151::before {
+.msg_sender_outgoing::before {
     content: " >> ";
 }
 .mms_img {
@@ -212,7 +212,8 @@ def dump_conversations(base_path, conversations, carrier_number):
                 f.write('<tr>')
                 f.write('<td><b><span class="msg_date">%s</span></b></td>' % dt.strftime('%m/%d/%y %I:%M:%S%p'))
                 number = address if msg.type_ in ["1", "137"] else carrier_number
-                f.write('<td><b><span class="msg_sender_%s">%s</span></b></td>' % (msg.type_, number))
+                sender = "incoming" if msg.type_ in ["1", "137"] else "outgoing"
+                f.write('<td><b><span class="msg_sender_%s">%s</span></b></td>' % (sender, number))
                 f.write('<td>%s' % msg.text)
                 if isinstance(msg, MMSMsg):
                     f.write('<br />')
