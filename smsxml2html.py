@@ -52,15 +52,16 @@ STYLESHEET_TEMPLATE = """
 
 
 class SMSMsg:
-    def __init__(self, timestamp, text, type_):
+    def __init__(self, timestamp, text, type_, contact_name):
         self.timestamp = timestamp
         self.text = text
         self.type_ = type_
+        self.contact_name = contact_name
 
 
 class MMSMsg(SMSMsg):
-    def __init__(self, timestamp=0, text="", type_=1):
-        SMSMsg.__init__(self, timestamp, text, type_)
+    def __init__(self, contact_name, timestamp=0, text="", type_=1):
+        SMSMsg.__init__(self, timestamp, text, type_, contact_name)
         self.images = []
 
     def add_image(self, base_path, timestamp, name, mime, data):
@@ -102,7 +103,7 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
             name = child.attrib['contact_name']
             body = child.attrib['body']
 
-            save_msg = SMSMsg(date, body, type_)
+            save_msg = SMSMsg(date, body, type_, name)
             conversations[address][date] = save_msg
             messages += 1
 
@@ -110,7 +111,7 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
                 users[address] = name
 
         elif child.tag == 'mms':
-            save_msg = MMSMsg()
+            save_msg = MMSMsg(contact_name=child.attrib['contact_name'])
             date = int(child.attrib['date'])  # Epoch timestamp
             addresses = {}
             for mms_child in child:
@@ -154,19 +155,19 @@ def parse_conversations(root, conversations, users, base_path, carrier_number):
     return messages  # Count of messages
 
 
-def dump_conversations(base_path, conversations, carrier_number):
+def dump_conversations(base_path, conversations, real_carrier_number):
     files = 0
 
-    with open(os.path.join(base_path, 'stylesheet.css'), 'w') as f:
+    with open(os.path.join(base_path, 'stylesheet.css'), 'w', encoding='utf-8') as f:
         f.write(STYLESHEET_TEMPLATE)
 
     for address, conversation in conversations.items():
         output_path = os.path.join(base_path, address + '.html')
 
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
 
             f.write('<!DOCTYPE html><html><head><meta charset="UTF-8">')
-            f.write('<link rel="stylesheet" type="text/css" href="stylesheet.css" /></head><body>' + "\n")
+            f.write('</head><body>' + "\n")
 
             # Generate the TOC
             prev_month_year = ""
@@ -183,39 +184,57 @@ def dump_conversations(base_path, conversations, carrier_number):
                 prev_month_year = month_year
 
             # Generate the TOC
-            f.write('<div class="toc"><ul>')
+            f.write('<nav><h1 id="toc">Jump to a specific month</h1><ul>')
             for month_year in months:
                 f.write('<li><a href="#%s">%s</a>' % (month_amap[month_year], month_year))
-            f.write('</ul></div>')
+            f.write('</ul></nav><hr/><hr/>')
 
             # Generate the body
             prev_month_year = ""
+            f.write('<main><h1 id="main">Conversations by month</h1>')
             for date in sorted(conversation.keys()):
                 msg = conversation[date]
                 dt = datetime.datetime.utcfromtimestamp(msg.timestamp / 1000)
                 month_year = dt.strftime('%B %Y')
                 if month_year != prev_month_year:
                     if prev_month_year != '':
-                        f.write('</table>')
-                    f.write('<a name="%s"></a>' % month_amap[month_year])
-                    f.write("<h2>%s</h2>\n" % month_year)
-                    f.write('<table class="month_convos">')
-                f.write('<tr>')
-                f.write('<td><b><span class="msg_date">%s</span></b></td>' % dt.strftime('%m/%d/%y %I:%M:%S%p'))
-                number = address if msg.type_ in ["1", "137"] else carrier_number
+                        f.write('</section>')
+                    f.write('<hr/>')
+                    f.write('<section class="month_convos" id="%s">' % month_amap[month_year])
+                    f.write("<h2>~~ %s ~~</h2>\n" % month_year)
+                f.write('<article class="one_message">')
+                f.write('<h3><font color="#600000">%s</font></h3>' % dt.strftime('%m/%d/%y %I:%M:%S%p'))
+                from_number = address if msg.type_ in ["1", "137"] else real_carrier_number
+                to_number = real_carrier_number if msg.type_ in ["1", "137"] else address
+                my_color = '006000'
+                their_color = '000060'
+                my_name = ' <i>(this phone)</i>'
+                their_name = ' <i>({a_name})</i>'.format(a_name = getattr(msg, "contact_name", 'throwaway_text')) if (hasattr(msg, 'contact_name') and getattr(msg, 'contact_name') != '(Unknown)') else ''
+                if (from_number == to_number and their_name != my_name):
+                    their_name = ' <i>(???)</i>'
                 sender = "incoming" if msg.type_ in ["1", "137"] else "outgoing"
-                f.write('<td><b><span class="msg_sender_%s">%s</span></b></td>' % (sender, number))
-                f.write('<td>%s' % msg.text)
+                f.write(
+                    '<h4 class="msg_sender">{direction}:  from <font color="#{from_color}">{from_number}</font>{from_name} to <font color="#{to_color}">{to_number}</font>{to_name}</h4>'.format(
+                        direction=sender.title(), 
+                        from_number=from_number, 
+                        to_number=to_number, 
+                        from_color=(their_color if sender == 'incoming' else my_color), 
+                        to_color=(my_color if sender == 'incoming' else their_color),
+                        from_name=(their_name if sender == 'incoming' else my_name), 
+                        to_name=(my_name if sender == 'incoming' else their_name)
+                        )
+                    )
+                f.write('<p class="msg_body">%s' % msg.text)
                 if isinstance(msg, MMSMsg):
                     f.write('<br />')
                     for image in msg.images:
-                        f.write('<a href="%s"><img class="mms_img" src="%s" /></a> ' % (image, image))
-                f.write('</td>')
-                f.write("</tr>\n")
+                        f.write('<a href="%s"><img class="mms_img" src="/%s" /></a> ' % (image, image))
+                f.write('</p>')
+                f.write('</article><hr align="left" width="20%" color="#808080">\n')
                 prev_month_year = month_year
 
-            f.write("</table>\n")
-            f.write("</body></html>")
+            f.write("</section>\n")
+            f.write("</main></body></html>")
         files += 1
     return files
 
@@ -225,9 +244,11 @@ def main():
     parser = argparse.ArgumentParser(description='Turns SMS Backup and Restore XML into HTML conversations with images')
     parser.add_argument('input', metavar='input', nargs='+', type=str, help='Input XML file')
     parser.add_argument('-o', '--output', type=str, required=True, help='Output directory')
-    parser.add_argument('-n', '--number', type=str, required=True, help='User\'s carrier number')
+    parser.add_argument('-d', '--dummy_number', type=str, required=True, help='User\'s dummy carrier number')
+    parser.add_argument('-r', '--real_number', type=str, required=True, help='User\'s real carrier number')
     args = parser.parse_args()
-    carrier_number = parse_carrier_number(args.number)
+    dummy_carrier_number = parse_carrier_number(args.dummy_number)
+    real_carrier_number = parse_carrier_number(args.real_number)
 
     messages = 0
     conversations = defaultdict(dict)
@@ -245,11 +266,11 @@ def main():
         except OSError:
             pass  # Already exists
             print("Parsing conversations from %s" % input_)
-        messages += parse_conversations(root, conversations, users, args.output, carrier_number)
+        messages += parse_conversations(root, conversations, users, args.output, dummy_carrier_number)
 
     print("Parsed %d messages in %d conversations with %d known user names" %
           (messages, len(conversations), len(users)))
-    files = dump_conversations(args.output, conversations, carrier_number)
+    files = dump_conversations(args.output, conversations, real_carrier_number)
     print("Dumped messages to %d conversation HTML files" % files)
 
 
